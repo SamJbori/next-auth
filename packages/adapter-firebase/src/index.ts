@@ -22,7 +22,6 @@
  * @module @next-auth/firebase-adapter
  */
 
-import { randomUUID } from "crypto"
 import { type AppOptions, getApps, initializeApp } from "firebase-admin/app"
 
 import {
@@ -193,7 +192,7 @@ export function FirestoreAdapter(
               C.users.where("email", "==", emailOrPhone)
             )
             if (!account && config.autoCreate) {
-              return await createUser({ id: randomUUID(), email: emailOrPhone })
+              return await createUser({ email: emailOrPhone })
             } else {
               return account
             }
@@ -203,7 +202,6 @@ export function FirestoreAdapter(
             )
             if (!account && config.autoCreate) {
               return await createUser({
-                id: randomUUID(),
                 phoneNumber: emailOrPhone,
               })
             } else {
@@ -215,7 +213,7 @@ export function FirestoreAdapter(
       }
       account = await getOneDoc(C.users.where("email", "==", emailOrPhone))
       if (!account && config && "autoCreate" in config && config.autoCreate) {
-        return await createUser({ id: randomUUID(), phoneNumber: emailOrPhone })
+        return await createUser({ phoneNumber: emailOrPhone })
       } else {
         return account
       }
