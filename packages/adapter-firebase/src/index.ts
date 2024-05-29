@@ -50,15 +50,6 @@ export interface FirebaseAdapterConfig extends AppOptions {
    */
   mode?: "phone" | "email"
   /**
-   * when enabeled the Adapter will create an account
-   * if no account found to allow quick signup
-   *
-   * the user account created will contain either
-   * the email or phoneNumber field depending on your
-   * mode setting, default email
-   */
-  autoCreate?: boolean
-  /**
    * The name of the app passed to {@link https://firebase.google.com/docs/reference/admin/node/firebase-admin.md#initializeapp `initializeApp()`}.
    */
   name?: string
@@ -168,55 +159,34 @@ export function FirestoreAdapter(
   const C = collestionsFactory(db, preferSnakeCase)
   const mapper = mapFieldsFactory(preferSnakeCase)
 
-  const createUser = async (userInit) => {
-    const { id: userId } = await C.users.add(userInit as AdapterUser)
-
-    const user = await getDoc(C.users.doc(userId))
-    if (!user) throw new Error("[createUser] Failed to fetch created user")
-
-    return user
-  }
   return {
-    createUser,
+    async createUser(userInit) {
+      const { id: userId } = await C.users.add(userInit as AdapterUser)
+
+      const user = await getDoc(C.users.doc(userId))
+      if (!user) throw new Error("[createUser] Failed to fetch created user")
+
+      return user
+    },
 
     async getUser(id) {
       return await getDoc(C.users.doc(id))
     },
 
     async getUserByEmail(emailOrPhone) {
-      let account
       if (config && "mode" in config) {
         switch (config.mode) {
           case "email":
-            account = await getOneDoc(
-              C.users.where("email", "==", emailOrPhone)
-            )
-            if (!account && config.autoCreate) {
-              return await createUser({ email: emailOrPhone })
-            } else {
-              return account
-            }
+            return await getOneDoc(C.users.where("email", "==", emailOrPhone))
           case "phone":
-            account = await getOneDoc(
+            return await getOneDoc(
               C.users.where("phoneNumber", "==", emailOrPhone)
             )
-            if (!account && config.autoCreate) {
-              return await createUser({
-                phoneNumber: emailOrPhone,
-              })
-            } else {
-              return account
-            }
           default:
             throw new Error(`[getUserByEmail] incorrect mode ${config.mode}`)
         }
       }
-      account = await getOneDoc(C.users.where("email", "==", emailOrPhone))
-      if (!account && config && "autoCreate" in config && config.autoCreate) {
-        return await createUser({ phoneNumber: emailOrPhone })
-      } else {
-        return account
-      }
+      return await getOneDoc(C.users.where("email", "==", emailOrPhone))
     },
 
     async getUserByAccount({ provider, providerAccountId }) {
