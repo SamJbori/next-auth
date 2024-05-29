@@ -43,13 +43,13 @@ import type {
 /** Configure the Firebase Adapter. */
 export interface FirebaseAdapterConfig extends AppOptions {
   /**
-   * Switch between OTP and Email account lookup
+   * Switch between Phone and Email account lookup
    *
-   * OTP => phoneNumber field
+   * Phone => phoneNumber field
    *
    * Email => email field (default)
    */
-  mode?: "otp" | "email"
+  mode?: "phone" | "email"
   /**
    * when enabeled the Adapter will create an account
    * if no account found to allow quick signup
@@ -197,7 +197,7 @@ export function FirestoreAdapter(
             } else {
               return account
             }
-          case "otp":
+          case "phone":
             account = await getOneDoc(
               C.users.where("phoneNumber", "==", emailOrPhone)
             )
